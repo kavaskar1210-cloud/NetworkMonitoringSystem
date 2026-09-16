@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manage Devices</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>📋 Network Devices</h1>
+
+    <div class="actions">
+
+        <a href="/add" class="button">
+            ➕ Add Device
+        </a>
+
+        <a href="/" class="button secondary">
+            🏠 Dashboard
+        </a>
+
+    </div>
+
+    <div class="panel">
+
+        <table>
+
+            <tr>
+                <th>ID</th>
+                <th>Device</th>
+                <th>IP Address</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Latency</th>
+                <th>Action</th>
+            </tr>
+
+            {% for device in devices %}
+
+            <tr>
+
+                <td>{{ device["id"] }}</td>
+
+                <td>{{ device["name"] }}</td>
+
+                <td>{{ device["ip_address"] }}</td>
+
+                <td>{{ device["device_type"] }}</td>
+
+                <td>
+
+                    {% if device["status"] == "Online" %}
+                        🟢 Online
+                    {% elif device["status"] == "Offline" %}
+                        🔴 Offline
+                    {% else %}
+                        ⚪ Unknown
+                    {% endif %}
+
+                </td>
+
+                <td>{{ device["latency"] }} ms</td>
+
+                <td>
+                    <a
+                        href="/delete/{{ device['id'] }}"
+                        onclick="return confirm('Delete this device?')"
+                    >
+                        🗑️ Delete
+                    </a>
+                </td>
+
+            </tr>
+
+            {% else %}
+
+            <tr>
+                <td colspan="7">
+                    No devices have been added.
+                </td>
+            </tr>
+
+            {% endfor %}
+
+        </table>
+
+    </div>
+
+</div>
+
+</body>
+</html>

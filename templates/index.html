@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Network Monitoring Dashboard</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>🌐 Network Device Monitoring Dashboard</h1>
+
+    <p class="subtitle">
+        Real-Time Network Monitoring & Management System
+    </p>
+
+    <!-- SUMMARY CARDS -->
+
+    <div class="cards">
+
+        <div class="card">
+            <h3>Total Devices</h3>
+            <div class="number">{{ total }}</div>
+        </div>
+
+        <div class="card">
+            <h3>Online Devices</h3>
+            <div class="number online">{{ online }}</div>
+        </div>
+
+        <div class="card">
+            <h3>Offline Devices</h3>
+            <div class="number offline">{{ offline }}</div>
+        </div>
+
+        <div class="card">
+            <h3>Average Latency</h3>
+            <div class="number">{{ average_latency }} ms</div>
+        </div>
+
+    </div>
+
+
+    <!-- NAVIGATION -->
+
+    <div class="actions">
+
+        <a href="/add" class="button">
+            ➕ Add Device
+        </a>
+
+        <a href="/devices" class="button secondary">
+            📋 Manage Devices
+        </a>
+
+        <a href="/history" class="button secondary">
+            📊 Monitoring History
+        </a>
+
+    </div>
+
+
+    <!-- ALERT PANEL -->
+
+    {% if offline > 0 %}
+
+    <div class="alert-panel">
+
+        <h2>🚨 Network Alert</h2>
+
+        <p>
+            {{ offline }} device(s) are currently offline.
+        </p>
+
+        {% for device in devices %}
+
+            {% if device["status"] == "Offline" %}
+
+            <div class="alert-item">
+                🔴 <strong>{{ device["name"] }}</strong>
+                — {{ device["ip_address"] }} is unreachable.
+            </div>
+
+            {% endif %}
+
+        {% endfor %}
+
+    </div>
+
+    {% else %}
+
+    <div class="success-panel">
+
+        <h2>✅ Network Status Normal</h2>
+
+        <p>
+            All monitored devices are currently online.
+        </p>
+
+    </div>
+
+    {% endif %}
+
+
+    <!-- DEVICE TABLE -->
+
+    <div class="panel">
+
+        <h2>📡 Device Status</h2>
+
+        <table>
+
+            <tr>
+                <th>Device</th>
+                <th>IP Address</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Latency</th>
+                <th>Last Checked</th>
+            </tr>
+
+            {% for device in devices %}
+
+            <tr>
+
+                <td>
+                    <strong>{{ device["name"] }}</strong>
+                </td>
+
+                <td>
+                    {{ device["ip_address"] }}
+                </td>
+
+                <td>
+                    {{ device["device_type"] }}
+                </td>
+
+                <td>
+
+                    {% if device["status"] == "Online" %}
+
+                        <span class="status online">
+                            🟢 Online
+                        </span>
+
+                    {% elif device["status"] == "Offline" %}
+
+                        <span class="status offline">
+                            🔴 Offline
+                        </span>
+
+                    {% else %}
+
+                        <span class="status">
+                            ⚪ Unknown
+                        </span>
+
+                    {% endif %}
+
+                </td>
+
+                <td>
+                    {{ device["latency"] }} ms
+                </td>
+
+                <td>
+                    {{ device["last_checked"] }}
+                </td>
+
+            </tr>
+
+            {% else %}
+
+            <tr>
+                <td colspan="6">
+                    No devices added yet.
+                </td>
+            </tr>
+
+            {% endfor %}
+
+        </table>
+
+    </div>
+
+    <!-- LATENCY GRAPH -->
+
+    <div class="panel">
+
+        <h2>📈 Network Latency Performance</h2>
+
+        <p>
+            Recent latency measurements from monitored devices.
+        </p>
+
+        <canvas id="latencyChart" height="100"></canvas>
+
+    </div>
+
+
+    <!-- CHART SCRIPT -->
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+
+        const historyData = [
+            {% for item in history %}
+            {
+                device: "{{ item['name'] }}",
+                latency: {{ item['latency'] }},
+                time: "{{ item['checked_at'] }}"
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ];
+
+        const labels = historyData
+            .slice(0, 20)
+            .reverse()
+            .map(item => item.time);
+
+        const deviceNames = [
+            ...new Set(historyData.map(item => item.device))
+        ];
+
+        const datasets = deviceNames.map(deviceName => {
+
+            return {
+                label: deviceName,
+
+                data: labels.map(time => {
+
+                    const record = historyData.find(
+                        item =>
+                            item.device === deviceName &&
+                            item.time === time
+                    );
+
+                    return record ? record.latency : null;
+                }),
+
+                borderWidth: 2,
+                tension: 0.3,
+                fill: false
+            };
+
+        });
+
+
+        const ctx = document
+            .getElementById("latencyChart")
+            .getContext("2d");
+
+
+        new Chart(ctx, {
+
+            type: "line",
+
+            data: {
+                labels: labels,
+                datasets: datasets
+            },
+
+            options: {
+
+                responsive: true,
+
+                plugins: {
+                    legend: {
+                        display: true
+                    }
+                },
+
+                scales: {
+
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: "Latency (ms)"
+                        }
+                    },
+
+                    x: {
+                        title: {
+                            display: true,
+                            text: "Time"
+                        }
+                    }
+
+                }
+
+            }
+
+        });
+
+    </script>
+    <!-- FOOTER -->
+
+    <div class="footer">
+
+        <p>
+            Network Device Monitoring and Management System
+        </p>
+
+        <p>
+            Flask • SQLite • Python • ICMP Monitoring
+        </p>
+
+    </div>
+
+</div>
+
+</body>
+</html>

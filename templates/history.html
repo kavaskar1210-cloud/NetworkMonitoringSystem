@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Monitoring History</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>📊 Monitoring History</h1>
+
+    <div class="actions">
+
+        <a href="/" class="button">
+            🏠 Dashboard
+        </a>
+
+        <a href="/devices" class="button secondary">
+            📋 Devices
+        </a>
+
+    </div>
+
+    <div class="panel">
+
+        <table>
+
+            <tr>
+                <th>Device</th>
+                <th>IP Address</th>
+                <th>Status</th>
+                <th>Latency</th>
+                <th>Checked At</th>
+            </tr>
+
+            {% for item in history %}
+
+            <tr>
+
+                <td>{{ item["name"] }}</td>
+
+                <td>{{ item["ip_address"] }}</td>
+
+                <td>
+
+                    {% if item["status"] == "Online" %}
+
+                        <span class="online">
+                            🟢 Online
+                        </span>
+
+                    {% else %}
+
+                        <span class="offline">
+                            🔴 Offline
+                        </span>
+
+                    {% endif %}
+
+                </td>
+
+                <td>
+                    {{ item["latency"] }} ms
+                </td>
+
+                <td>
+                    {{ item["checked_at"] }}
+                </td>
+
+            </tr>
+
+            {% else %}
+
+            <tr>
+                <td colspan="5">
+                    No monitoring history available.
+                </td>
+            </tr>
+
+            {% endfor %}
+
+        </table>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>
